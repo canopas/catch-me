@@ -198,6 +198,16 @@ class JourneyTimelineViewModel @Inject constructor(
         return calendar.timeInMillis
     }
 
+    private fun isToday(timestamp: Long): Boolean {
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = timestamp
+        val today = Calendar.getInstance()
+        today.set(Calendar.HOUR_OF_DAY, 0)
+        today.set(Calendar.MINUTE, 0)
+
+        return today.timeInMillis == calendar.timeInMillis
+    }
+
     fun navigateBack() {
         navigator.navigateBack()
     }
@@ -212,6 +222,8 @@ class JourneyTimelineViewModel @Inject constructor(
 
     fun onFilterByDate(selectedTimeStamp: Long) {
         dismissDatePicker()
+
+        val isSelectedDateToday = isToday(selectedTimeStamp)
         val calendar = Calendar.getInstance().apply {
             timeInMillis = selectedTimeStamp
         }
@@ -226,7 +238,18 @@ class JourneyTimelineViewModel @Inject constructor(
         _state.value = _state.value.copy(
             selectedTimeFrom = timestampFrom,
             selectedTimeTo = timestampTo,
-            groupedLocation = emptyMap()
+            groupedLocation = emptyMap(),
+            isToday = isSelectedDateToday
+        )
+        loadLocations()
+    }
+
+    fun resetToToday() {
+        _state.value = _state.value.copy(
+            selectedTimeFrom = getTodayStartTimestamp(),
+            selectedTimeTo = getTodayEndTimestamp(),
+            groupedLocation = emptyMap(),
+            isToday = true
         )
         loadLocations()
     }
@@ -261,5 +284,6 @@ data class JourneyTimelineState(
     val connectivityStatus: ConnectivityObserver.Status = ConnectivityObserver.Status.Available,
     val error: String? = null,
     val isLoadingMore: Boolean = true,
-    val selectedMapStyle: String = ""
+    val selectedMapStyle: String = "",
+    val isToday: Boolean = true
 )
